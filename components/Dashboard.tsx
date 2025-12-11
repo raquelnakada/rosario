@@ -6,6 +6,7 @@ import NotificationRequest from './NotificationRequest';
 interface DashboardProps {
   userName: string;
   completedDays: number[];
+  lastCompletionDate: string | null;
   onSelectDay: (plan: DayPlan) => void;
   onOpenGuide: () => void;
   onOpenDailyThought: () => void;
@@ -14,12 +15,27 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ 
   userName, 
   completedDays, 
+  lastCompletionDate,
   onSelectDay, 
   onOpenGuide,
   onOpenDailyThought
 }) => {
   const completedCount = completedDays.length;
   const progress = Math.round((completedCount / 21) * 100);
+
+  // Verifica se a última oração foi feita HOJE
+  const checkPlayedToday = () => {
+    if (!lastCompletionDate) return false;
+    const last = new Date(lastCompletionDate);
+    const now = new Date();
+    return (
+      last.getDate() === now.getDate() &&
+      last.getMonth() === now.getMonth() &&
+      last.getFullYear() === now.getFullYear()
+    );
+  };
+
+  const playedToday = checkPlayedToday();
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
@@ -65,28 +81,45 @@ const Dashboard: React.FC<DashboardProps> = ({
              {progress > 0 && <div className="absolute right-0 -top-1 w-5 h-5 bg-white border-4 border-blue-600 rounded-full"></div>}
           </div>
         </div>
+        {playedToday && completedCount < 21 && (
+          <p className="mt-3 text-sm text-center text-slate-500 bg-slate-50 py-2 rounded-lg">
+            Você já rezou hoje! Volte amanhã para continuar sua jornada.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {DAY_PLANS.map((plan) => {
           const isCompleted = completedDays.includes(plan.day);
-          const isLocked = !isCompleted && completedDays.length > 0 && plan.day > Math.max(...completedDays) + 1;
-          // Bloqueia o dia 1 apenas se não tiver completado nada? Não, dia 1 sempre aberto se nada feito.
-          // A lógica acima já trata: se completedDays.length == 0, max(...) é -infinity, então plan.day > -inf + 1 (false para 1).
-          // Correção: Math.max de array vazio é -Infinity.
+          
+          // Calcula qual o maior dia já completado
           const maxCompleted = completedDays.length > 0 ? Math.max(...completedDays) : 0;
-          const isLockedCorrect = !isCompleted && plan.day > maxCompleted + 1;
+          
+          // Lógica de bloqueio:
+          // Se já completou, não está bloqueado (pode refazer).
+          // Se não completou:
+          //   - Se for o próximo dia (maxCompleted + 1) E já jogou hoje -> Bloqueado (Esperar amanhã)
+          //   - Se for o próximo dia (maxCompleted + 1) E NÃO jogou hoje -> Liberado
+          //   - Se for além do próximo dia -> Bloqueado
+          
+          // O teto permitido é: se jogou hoje, é o nível atual. Se não jogou, é o próximo.
+          const allowedCeiling = playedToday ? maxCompleted : maxCompleted + 1;
+          
+          const isLocked = !isCompleted && plan.day > allowedCeiling;
+          
+          // Verifica se é o dia que está "esperando" por amanhã (próximo da sequência, mas jogou hoje)
+          const isWaitingForTomorrow = !isCompleted && plan.day === maxCompleted + 1 && playedToday;
 
           return (
             <button
               key={plan.day}
-              onClick={() => !isLockedCorrect && onSelectDay(plan)}
-              disabled={isLockedCorrect}
+              onClick={() => !isLocked && onSelectDay(plan)}
+              disabled={isLocked}
               className={`
                 relative p-5 rounded-2xl text-left transition-all duration-300 flex flex-col h-40 group
                 ${isCompleted 
                   ? 'bg-blue-50 border-2 border-blue-200' 
-                  : isLockedCorrect
+                  : isLocked
                     ? 'bg-slate-50 border border-slate-100 opacity-70 cursor-not-allowed'
                     : 'bg-white border border-slate-200 hover:border-blue-400 hover:shadow-lg hover:-translate-y-1'
                 }
@@ -104,23 +137,31 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
                   </span>
                 )}
-                {!isCompleted && !isLockedCorrect && (
+                {!isCompleted && !isLocked && (
                    <span className="text-blue-500 bg-blue-50 rounded-full p-1 animate-pulse">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                    </span>
                 )}
-                {isLockedCorrect && (
+                {isLocked && (
                   <span className="text-slate-300">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    {isWaitingForTomorrow ? (
+                      <span title="Disponível amanhã">🕒</span>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    )}
                   </span>
                 )}
               </div>
               
               <div className="mt-auto">
-                <h3 className={`font-serif font-bold leading-tight mb-1 ${isCompleted ? 'text-blue-900' : isLockedCorrect ? 'text-slate-400' : 'text-slate-800'}`}>
+                <h3 className={`font-serif font-bold leading-tight mb-1 ${isCompleted ? 'text-blue-900' : isLocked ? 'text-slate-400' : 'text-slate-800'}`}>
                   {plan.title}
                 </h3>
-                <p className="text-xs text-slate-500 line-clamp-1">{plan.theme}</p>
+                {isWaitingForTomorrow ? (
+                   <p className="text-xs text-orange-500 font-bold">Disponível amanhã</p>
+                ) : (
+                   <p className="text-xs text-slate-500 line-clamp-1">{plan.theme}</p>
+                )}
               </div>
             </button>
           );

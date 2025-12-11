@@ -7,30 +7,63 @@ import DailyThought from './components/DailyThought';
 import { DayPlan } from './types';
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+  
   const [currentPlan, setCurrentPlan] = useState<DayPlan | null>(null);
   const [showGuide, setShowGuide] = useState<boolean>(false);
   const [showDailyThought, setShowDailyThought] = useState<boolean>(false);
+  
   const [completedDays, setCompletedDays] = useState<number[]>([]);
+  const [lastCompletionDate, setLastCompletionDate] = useState<string | null>(null);
 
-  // Carregar usuário e progresso ao iniciar
+  // 1. Carregar sessão ativa (Nome e Telefone) ao iniciar
   useEffect(() => {
-    const savedUser = localStorage.getItem('rosary_user');
-    if (savedUser) setUser(savedUser);
-
-    const savedProgress = localStorage.getItem('rosary_progress');
-    if (savedProgress) {
-      try {
-        setCompletedDays(JSON.parse(savedProgress));
-      } catch (e) {
-        console.error("Failed to parse progress", e);
-      }
+    const savedPhone = localStorage.getItem('rosary_current_phone');
+    const savedName = localStorage.getItem('rosary_current_name');
+    
+    if (savedPhone && savedName) {
+      setUserPhone(savedPhone);
+      setUserName(savedName);
     }
   }, []);
 
-  const handleLogin = (name: string) => {
-    setUser(name);
-    localStorage.setItem('rosary_user', name);
+  // 2. Carregar o progresso ESPECÍFICO daquele telefone sempre que o usuário mudar
+  useEffect(() => {
+    if (userPhone) {
+      // Chaves personalizadas por telefone: rosary_progress_11999999999
+      const progressKey = `rosary_progress_${userPhone}`;
+      const dateKey = `rosary_last_date_${userPhone}`;
+
+      const savedProgress = localStorage.getItem(progressKey);
+      const savedDate = localStorage.getItem(dateKey);
+
+      if (savedProgress) {
+        try {
+          setCompletedDays(JSON.parse(savedProgress));
+        } catch (e) {
+          console.error("Failed to parse progress", e);
+          setCompletedDays([]);
+        }
+      } else {
+        setCompletedDays([]); // Novo usuário (ou novo telefone) começa do zero
+      }
+
+      if (savedDate) {
+        setLastCompletionDate(savedDate);
+      } else {
+        setLastCompletionDate(null);
+      }
+    }
+  }, [userPhone]);
+
+  const handleLogin = (name: string, phone: string) => {
+    setUserName(name);
+    setUserPhone(phone);
+    
+    // Salva a sessão atual
+    localStorage.setItem('rosary_current_name', name);
+    localStorage.setItem('rosary_current_phone', phone);
   };
 
   const handleDaySelect = (plan: DayPlan) => {
@@ -39,13 +72,16 @@ const App: React.FC = () => {
   };
 
   const handleComplete = () => {
-    if (currentPlan) {
+    if (currentPlan && userPhone) {
       const newCompleted = [...new Set([...completedDays, currentPlan.day])];
       setCompletedDays(newCompleted);
-      localStorage.setItem('rosary_progress', JSON.stringify(newCompleted));
       
-      // Salva a data da última conclusão para controle (opcional para lógica futura)
-      localStorage.setItem('rosary_last_completion_date', new Date().toISOString());
+      const now = new Date().toISOString();
+      setLastCompletionDate(now);
+
+      // Salva no armazenamento específico deste telefone
+      localStorage.setItem(`rosary_progress_${userPhone}`, JSON.stringify(newCompleted));
+      localStorage.setItem(`rosary_last_date_${userPhone}`, now);
 
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification("Oração Concluída!", {
@@ -62,8 +98,8 @@ const App: React.FC = () => {
     setShowGuide(false);
   };
 
-  // Se não tiver usuário, mostra tela de Login
-  if (!user) {
+  // Se não tiver usuário logado, mostra tela de Login
+  if (!userName || !userPhone) {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
@@ -94,8 +130,9 @@ const App: React.FC = () => {
         </div>
       ) : (
         <Dashboard 
-          userName={user}
+          userName={userName} // Passa o Nome para exibição
           completedDays={completedDays} 
+          lastCompletionDate={lastCompletionDate}
           onSelectDay={handleDaySelect} 
           onOpenGuide={() => {
             setShowGuide(true);
