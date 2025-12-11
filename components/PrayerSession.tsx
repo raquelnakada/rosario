@@ -1,6 +1,7 @@
 import React from 'react';
 import { DayPlan } from '../types';
 import Reflection from './Reflection';
+import BeadCounter from './BeadCounter';
 
 interface PrayerSessionProps {
   plan: DayPlan;
@@ -45,8 +46,12 @@ const PrayerSession: React.FC<PrayerSessionProps> = ({ plan, onComplete, onBack 
                 {plan.weekTheme}
               </span>
             </div>
+
+            {/* Contador de Orações Adicionado Aqui */}
+            <BeadCounter />
             
             <div className="space-y-4">
+              <h3 className="font-bold text-slate-600 text-sm uppercase tracking-wider mb-4 ml-1">Mistérios de Hoje</h3>
               {plan.mysteries.map((mystery, index) => (
                 <div key={index} className="flex gap-4 p-4 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50 last:border-0">
                   <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
