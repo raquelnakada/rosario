@@ -2,23 +2,34 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Jornada do Rosário</title>
     
-    <!-- Meta Tags para Redes Sociais (WhatsApp, Facebook, etc) -->
+    <!-- PWA Config -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1e3a8a" />
+    
+    <!-- iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Rosário" />
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4358/4358686.png" />
+
+    <!-- Meta Tags para Redes Sociais -->
     <meta property="og:title" content="Desafio do Rosário - 21 Dias" />
     <meta property="og:description" content="Um desafio espiritual para cultivar o hábito da oração do Rosário. Aceite o convite e transforme sua vida espiritual." />
     <meta property="og:image" content="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop" />
-    <meta property="og:url" content="https://rosario-21-dias.vercel.app" />
+    <meta property="og:url" content="https://rosario-pw13.vercel.app" />
     <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#1e3a8a" />
 
-    <!-- Tailwind via CDN para garantir estilização rápida sem config complexa -->
+    <!-- Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
       body { font-family: 'Lato', sans-serif; }
       .font-serif { font-family: 'Merriweather', serif; }
+      /* Previne o pull-to-refresh no mobile para parecer mais app */
+      body { overscroll-behavior-y: none; }
     </style>
   <script type="importmap">
 {
@@ -33,7 +44,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-800">
+  <body class="bg-slate-50 text-slate-800 select-none">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
