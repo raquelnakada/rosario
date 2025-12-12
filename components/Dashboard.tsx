@@ -11,6 +11,7 @@ interface DashboardProps {
   onSelectDay: (plan: DayPlan) => void;
   onOpenGuide: () => void;
   onOpenDailyThought: () => void;
+  onLogout: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -19,7 +20,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   lastCompletionDate,
   onSelectDay, 
   onOpenGuide,
-  onOpenDailyThought
+  onOpenDailyThought,
+  onLogout
 }) => {
   const completedCount = completedDays.length;
   const progress = Math.round((completedCount / 21) * 100);
@@ -42,7 +44,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     const shareData = {
       title: 'Desafio do Rosário',
       text: `Estou participando do Desafio do Rosário de 21 Dias e já completei ${progress}%! Venha rezar comigo:`,
-      url: window.location.href // Pega o link exato onde o site está rodando
+      url: window.location.href
     };
 
     try {
@@ -62,7 +64,16 @@ const Dashboard: React.FC<DashboardProps> = ({
       <header className="text-center mb-8 py-10 bg-gradient-to-b from-blue-50 to-white rounded-3xl border border-blue-50 relative overflow-hidden">
         <div className="relative z-10">
           <div className="mb-4">
-            <h2 className="text-lg text-blue-600 font-bold mb-1">Olá, {userName}</h2>
+            <h2 className="text-lg text-blue-600 font-bold mb-1 flex items-center justify-center gap-2">
+              Olá, {userName}
+              <button 
+                onClick={onLogout}
+                className="text-xs font-normal text-slate-400 hover:text-red-500 underline transition-colors"
+                title="Sair da conta"
+              >
+                (Sair)
+              </button>
+            </h2>
             <h1 className="text-3xl md:text-5xl font-serif font-bold text-blue-900">Desafio do Rosário</h1>
           </div>
           <p className="text-blue-900/60 font-medium tracking-wide uppercase text-sm mb-6">21 Dias de Transformação</p>
