@@ -24,13 +24,27 @@ const LoginScreen: React.FC<LoginProps> = ({ onLogin }) => {
 
   const isValid = name.trim().length > 0 && phone.length >= 10 && phone.length <= 11;
 
+  // Backup: SVG Azul caso a imagem logo.png não seja encontrada
+  const fallbackSVG = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjI1NiIgZmlsbD0iIzFlM2E4YSIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTUlIiBmb250LXNpemU9IjIyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+8J+RigwL3RleHQ+CiAgPHRleHQgeD0iNTAlIiB5PSI4NSUiIGZvbnQtc2l6ZT0iNDIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DYW1pbmhvIGRhIEdyYcOnYTwvdGV4dD4KPC9zdmc+`;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 bg-[url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center">
       <div className="absolute inset-0 bg-blue-900/40 backdrop-blur-sm"></div>
       
       <div className="bg-white/95 backdrop-blur-md p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md text-center relative z-10 border border-white/50">
-        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner">
-          🕊️
+        
+        {/* Logo da Comunidade / App */}
+        <div className="flex justify-center mb-8">
+          <img 
+            src="/logo.png" 
+            alt="Caminho da Graça" 
+            className="w-48 h-48 rounded-full shadow-2xl border-4 border-white object-cover bg-white"
+            onError={(e) => {
+              // Se não encontrar o logo.png, usa o desenho provisório
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = fallbackSVG;
+            }}
+          />
         </div>
         
         <h1 className="text-3xl font-serif font-bold text-blue-900 mb-2">Bem-vindo(a)</h1>
